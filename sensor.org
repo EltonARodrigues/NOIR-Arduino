@@ -1,0 +1,26 @@
+* Sensors
+
+- MQ2
+- MQ4
+- MQ9
+- MQ135
+
+* Descrição
+
+** MQ135
+
+[[https://github.com/GeorgK/MQ135][Biblioteca usada para calibrar MQ135 para CO2]]. Documentação dessa lib está em: [[https://hackaday.io/project/3475-sniffing-trinket/log/12363-mq135-arduino-library][Link]]
+
+1. Escopo de detecção:
+- 10ppm - 300ppm NH3
+- 10ppm - 1000ppm Benzene
+- 10ppm - 300ppm Alcohol
+
+
+| Sensors | Gases                                 |
+|---------+---------------------------------------|
+| MQ-2    | Gás Combustivel                       |
+| MQ-4    | Gás Natural e Metano                  |
+| MQ-9    | Monóxido de carbono e gás combustivel |
+| MQ-135  | NH3, Benzeno, NOx, Alcohol,CO2,fumaça |
+| MQ-7    | Monóxido de Carbono                   |
