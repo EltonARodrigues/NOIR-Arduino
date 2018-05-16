@@ -11,6 +11,7 @@
 #include <SoftwareSerial.h>
 #include "MQ135.h"
 #include "DHT.h"
+#include "Streaming.h"
 
 
 #define PIN_MICS2714 1
@@ -21,8 +22,10 @@
 
 // Comment to show in Serial Monitor 
 //#define BLUETOOTH_ON
+#define BLUETOOTH_NAME "Sensor do AR"
+#define BLUETOOTH_PASSWORD 1234
 
-SoftwareSerial bSerial(11, 10); // Emulate port (Rx, Tx) to use with hc-06
+SoftwareSerial bluetooth(11, 10); // Emulate port (Rx, Tx) to use with hc-06
 
 DHT dht(DHTPIN, DHTTYPE); 
 MQ135 mq135_sensor = MQ135(PIN_MQ135);
@@ -37,9 +40,21 @@ float ppmNO2 =0;  //ppm NO2
 void setup()
 {
   Serial.begin(9600);
-  bSerial.begin(9600);
+#ifdef BLUETOOTH_ON
+  // bluetooh set config for name and password
+  bluetooth.begin(9600);
   dht.begin();
-
+  bluetooth.print("AT");
+  delay(1000);
+  bluetooth.print("AT+NAME");
+  bluetooth.print("Sensor do AR");
+  bluetooth.print("\r\n");
+  delay(1000);
+  bluetooth.print("AT+PIN");
+  bluetooth.print(senha);
+  bluetooth.print("\r\n");
+  delay(1000);
+#endif
 }
 
 void loop()
@@ -63,24 +78,10 @@ void loop()
     
      
 #ifdef BLUETOOTH_ON
-
-  bSerial.print(temperature);
-  bSerial.print(", ");
-  bSerial.print(humidity);
-  bSerial.print(", ");
-  bSerial.print(ppbNO2);
-  bSerial.print(", ");
-  bSerial.println(correctedPPM);
+  bluetooth << temperature << ", " << "humidity" << ", " << ppbNO2 << ", " << correctedPPM; 
 
 #else
-
-  Serial.print(temperature);
-  Serial.print(", ");
-  Serial.print(humidity);
-  Serial.print(", ");
-  Serial.print(ppbNO2);
-  Serial.print(", ");
-  Serial.println(ppm);
+  Serial << temperature << ", " << humidity << ", " << ppbNO2 << ", " << correctedPPM; 
 
 #endif  
 
