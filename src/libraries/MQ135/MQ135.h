@@ -24,7 +24,7 @@ v1.0 - First release
 /// The load resistance on the board
 #define RLOAD 22.0
 /// Calibration resistance at atmospheric CO2 level
-#define RZERO 54.64  //655.66 //319.96 //444.65  76.63 
+//#define RZERO 158//54.64  //655.66 //319.96 //444.65  76.63 
 /// Parameters for calculating ppm of CO2 from sensor resistance
 #define PARA 116.6020682
 #define PARB 2.769034857
@@ -50,8 +50,8 @@ class MQ135 {
   float getCorrectionFactor(float t, float h);
   float getResistance();
   float getCorrectedResistance(float t, float h);
-  float getPPM();
-  float getCorrectedPPM(float t, float h);
+  float getPPM(float rzero);
+  float getCorrectedPPM(float t, float h, float rzero);
   float getRZero();
   float getCorrectedRZero(float t, float h);
 };

@@ -85,8 +85,8 @@ float MQ135::getCorrectedResistance(float t, float h) {
 @return The ppm of CO2 in the air
 */
 /**************************************************************************/
-float MQ135::getPPM() {
-  return PARA * pow((getResistance()/RZERO), -PARB);
+float MQ135::getPPM(float rzero) {
+  return PARA * pow((getResistance()/rzero), -PARB);
 }
 
 /**************************************************************************/
@@ -100,8 +100,8 @@ float MQ135::getPPM() {
 @return The ppm of CO2 in the air
 */
 /**************************************************************************/
-float MQ135::getCorrectedPPM(float t, float h) {
-  return PARA * pow((getCorrectedResistance(t, h)/RZERO), -PARB);
+float MQ135::getCorrectedPPM(float t, float h, float rzero) {
+  return PARA * pow((getCorrectedResistance(t, h)/rzero), -PARB);
 }
 
 /**************************************************************************/
