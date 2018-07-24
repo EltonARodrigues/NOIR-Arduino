@@ -8,6 +8,7 @@
 **********************************************/
 
 #include <SoftwareSerial.h>
+#include<DSM501.h>
 #include "MQ135.h"
 #include "MQ7.h"
 #include "DHT.h"
@@ -15,15 +16,18 @@
 #include <SPI.h>
 #include <SD.h>
 
+
 // Calibration resistance at atmospheric CO2 level
 float rzero = 76.63;
 
+#define DSM501_PM10 3
+#define DSM501_PM25 4
 #define PIN_MICS2714 A1
 #define DHTPIN 5
 #define PIN_MQ135 A5
 #define PIN_MQ7 A0  
 
-#define DHTTYPE DHT11
+#define DHTTYPE DHT22
 
 ///sdcard
 bool sdcard_status = false;
@@ -31,13 +35,14 @@ bool sdcard_status = false;
 File sensorFile;
 
 bool bluetooh_status = false;
-#define BLUETOOTH_NAME "Dobrardor de AR"
+#define BLUETOOTH_NAME "Dobrador  de AR"
 #define BLUETOOTH_PASSWORD 0666
 
-  SoftwareSerial bluetooth(7, 6); // Emulate port (Rx, Tx) to use with hc-06
+SoftwareSerial bluetooth(6, 7); // Emulate port (Rx, Tx) to use with hc-06
 
-//DHT dht(DHTPIN, DHTTYPE); 
-MQ135 mq135_sensor = MQ135(PIN_MQ135);
+DSM501 dsm501(DSM501_PM10, DSM501_PM25);
+DHT dht(DHTPIN, DHTTYPE); 
+//MQ135 mq135_sensor = MQ135(PIN_MQ135);
 MQ7 mq7(PIN_MQ7,5.0);
 
 
@@ -56,6 +61,7 @@ const int ledPinSD =  9;
 
 void setup()
 {
+  dsm501.begin(MIN_WIN_SPAN);
   digitalWrite(ledPinBlue, LOW);
   digitalWrite(ledPinSD, LOW);
   pinMode(ledPinSD, OUTPUT);
@@ -64,7 +70,7 @@ void setup()
   pinMode(buttonPinSD, INPUT);
   //(buttonPinMQC, INPUT);
   Serial.begin(9600);
-  //dht.begin();
+  dht.begin();
   Serial.println("INICIO");
   while(1){
     if (digitalRead(buttonPinBlue) == HIGH){
@@ -76,6 +82,12 @@ void setup()
       digitalWrite(ledPinSD, HIGH);
       sdcard_status = true;
       break;
+    }
+    for (int i = 1; i <= 60; i++)
+    {
+      delay(1000); // 1s
+      Serial.print(i);
+      Serial.println(" s (wait 60s for DSM501 to warm up)");
     }
   }
   if(bluetooh_status){
@@ -96,16 +108,22 @@ void setup()
   if(sdcard_status){
     if (!SD.begin(4)) {
       Serial.println("Erro to Start SDCARD");
-      while(1);
+      while(1){
+        digitalWrite(ledPinSD, HIGH);
+        delay(1000);
+        digitalWrite(ledPinSD, LOW);
+      }
     }
   }
 }
 
 void loop()
 {
+  
   delay(1000);
+  dsm501.update();
   if(digitalRead(buttonPinBlue) == HIGH){
-    rzero = mq135_sensor.getRZero();
+    //rzero = mq135_sensor.getRZero();
     if(digitalRead(ledPinBlue) == HIGH){
       digitalWrite(ledPinBlue, LOW);
       delay(200);
@@ -118,26 +136,37 @@ void loop()
     }
   }
   // Get temp and humidity values with DHT11
-  float temperature= 25.0;//dht.readTemperature();
-  float humidity= 80.0;//dht.readHumidity();
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
 
   float ppmCO = mq7.getPPM();
 
   // Get sensor CO2 Resistence (RS/R0) to convert values in PPM
-  float correctedRZero = mq135_sensor.getCorrectedRZero(temperature, humidity);
-  float resistance = mq135_sensor.getResistance();
-  float ppm = mq135_sensor.getPPM(rzero);
-  float correctedPPM = mq135_sensor.getCorrectedPPM(temperature, humidity, rzero);
-      
-  // Read NO2 sensor:
-  Vout = analogRead(PIN_MICS2714)/409.2; // take reading and convert ADC value to voltage
-  Rs = 22000/((5/Vout) - 1);   // find sensor resistance from Vout, using 5V input & 22kOhm load resistor
-  ppbNO2 = (.000008*Rs - .0194)*1000;    //convert Rs to ppb concentration NO2 (equation derived from data found on http://airpi.es/sensors.php
-  //ppmNO2 = ppmNO2/1000; //ppb to ppm
+  //float correctedRZero = mq135_sensor.getCorrectedRZero(temperature, humidity);
+  //float resistance = mq135_sensor.getResistance();
+  float ppmco2 = 0; // = mq135_sensor.getPPM(rzero);
+  //float correctedPPM = mq135_sensor.getCorrectedPPM(temperature, humidity, rzero);
+  float pm10_weight = dsm501.getParticleWeight(0);
+  float pm25_weight = dsm501.getParticleWeight(1);
+  float pm25 = dsm501.getPM25();
+  Serial.println(" ug/m3");
+  
+  // get PM density of particles over 2.5 μm
+  Serial.print("PM25: ");
+  Serial.print(dsm501.getParticleWeight(1));
+  Serial.println(" ug/m3");
+  
+  Serial.print("AQI: ");
+  Serial.println(dsm501.getAQI());
+  
+  // get PM2.5 density of particles between 1.0~2.5 μm
+  Serial.print("PM2.5: ");
+  Serial.print(dsm501.getPM25());
+
     
   if(sdcard_status){
     sensorFile = SD.open(FILE_NAME, FILE_WRITE);
-    sensorFile << temperature << ", " << humidity << ", " << ppbNO2<< ", " << ppm << ", " << rzero << ", " << ppmCO << "\n";
+    sensorFile << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", "  << pm10_weight << ", " <<  pm25_weight << pm25 << ", ""\n";
     sensorFile.close();
     if(digitalRead(buttonPinSD) == HIGH){
       digitalWrite(ledPinSD, LOW);
@@ -145,7 +174,7 @@ void loop()
     }
   }
   if(bluetooh_status)
-    bluetooth << temperature << ", " << humidity << ", " << ppbNO2 << ", " << ppm << ","<< correctedPPM << "," << rzero <<"\n";
+    bluetooth << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", "  << pm10_weight << ", " <<  pm25_weight << pm25 << ", ""\n";
   else
-    Serial << temperature << ", " << humidity << ", " << ppbNO2 << ", " << ppm << ", " << rzero << ", "<< ppmCO << "\n";
+    Serial << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", "  << pm10_weight << ", " <<  pm25_weight << pm25 << ", ""\n";
 }
