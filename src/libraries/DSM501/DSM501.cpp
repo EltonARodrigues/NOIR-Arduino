@@ -36,7 +36,7 @@ DSM501::DSM501(int pin10, int pin25) {
 	
 }
 
-void DSM501::begin(uint32_t span) {
+int DSM501::begin(uint32_t span) {
 	pinMode(_pin[PM10_IDX], INPUT);
 	pinMode(_pin[PM25_IDX], INPUT);
 		
@@ -46,6 +46,7 @@ void DSM501::begin(uint32_t span) {
 	    _span = MAX_WIN_SPAN * 1000;
 	else
 	    _span = span * 1000;
+	return _span;
 }
 
 void DSM501::reset() {
@@ -56,21 +57,15 @@ void DSM501::reset() {
 	}
 }
 
-void DSM501::update() {
-	uint32_t start = millis();
-	for(;;)
-	{
-		if (millis() < start || millis() - start >= _span)
-		{
-		    _done[0] = 1;
-		    _done[1] = 1;
-		    break;
-		}
-              _win_total[0] ++;
+void DSM501::update(uint32_t win_total[2]) {
+
+	  _done[0] = 1;
+	  _done[1] = 1;
+		_win_total[0] ++;
 		_low_total[0] += !digitalRead(_pin[PM10_IDX]);
 		_win_total[1] ++;
 		_low_total[1] += !digitalRead(_pin[PM25_IDX]);
-	}
+
 }
 
 float DSM501::getLowRatio(int i) {

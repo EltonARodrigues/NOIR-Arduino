@@ -47,8 +47,8 @@ see also https://github.com/alexjx/AqiMon/blob/master/DSM501.h
 class DSM501 {
 public:
 	DSM501(int pin10 = PM10_PIN, int pin25 = PM25_PIN);
-	void begin(uint32_t span = MIN_WIN_SPAN);
-	void update(); // called in the loop function for update
+	int begin(uint32_t span = MIN_WIN_SPAN);
+	void DSM501::update(uint32_t win_total[2]); //void update(); // called in the loop function for update
 	void reset();
 
 	float getLowRatio(int i = 0);

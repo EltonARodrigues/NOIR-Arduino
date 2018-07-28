@@ -1,0 +1,48 @@
+#include <DSM501.h>
+
+
+uint32_t win_total[2];
+
+uint32_t start;
+int get_span;
+
+#define DSM501_PM10 3
+#define DSM501_PM25 4
+
+DSM501 dsm501(DSM501_PM10, DSM501_PM25);
+
+void setup()
+{
+  Serial.begin(9600);
+  get_span = dsm501.begin(MIN_WIN_SPAN);
+  Serial.print(get_span);
+  for (int i = 1; i <= 60; i++)
+  {
+    delay(1000); // 1s
+    Serial.print(i);
+    Serial.println(" s (wait 60s for DSM501 to warm up)");
+  }
+  start = millis();
+}
+
+void loop()
+{
+  if (millis() < start || millis() - start >= get_span)
+  {
+      start = millis();
+      dsm501.update(win_total);
+      Serial.println("-------------------------------------------");
+  }
+  win_total[0] ++;
+  win_total[1] ++;
+
+  Serial.print("PM25: ");
+  Serial.print(dsm501.getParticleWeight(1));
+  Serial.println(" ug/m3");
+
+  Serial.print("PM2.5: ");
+  Serial.print(dsm501.getPM25());
+  Serial.println(" ug/m3");
+  
+  delay(1000);
+}
