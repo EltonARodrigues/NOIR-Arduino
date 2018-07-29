@@ -57,14 +57,14 @@ void DSM501::reset() {
 	}
 }
 
-void DSM501::update(uint32_t win_total[2]) {
+void DSM501::update(uint32_t win_total[2], uint32_t low_total[2]) {
 
 	  _done[0] = 1;
 	  _done[1] = 1;
 		_win_total[0] ++;
-		_low_total[0] += !digitalRead(_pin[PM10_IDX]);
+		_low_total[0] = low_total[0];
 		_win_total[1] ++;
-		_low_total[1] += !digitalRead(_pin[PM25_IDX]);
+		_low_total[1] = low_total[1];
 
 }
 
