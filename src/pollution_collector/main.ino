@@ -8,59 +8,13 @@
 **********************************************/
 
 #include <SoftwareSerial.h>
-//#include<DSM501.h>
+#include <SPI.h>
+#include <SD.h>
 #include "MQ135.h"
 #include "MQ7.h"
 #include "DHT.h"
 #include "Streaming.h"
-#include <SPI.h>
-#include <SD.h>
-
-
-// Calibration resistance at atmospheric CO2 level
-float rzero = 76.63;
-
-#define DSM501_PM25 6
-#define DHTPIN 5
-#define PIN_MQ135 A4
-#define PIN_MQ7 A0
-
-#define DHTTYPE DHT22
-
-///sdcard
-bool sdcard_status = false;
-#define FILE_NAME "valores.csv"
-File sensorFile;
-
-bool bluetooh_status = false;
-//#define BLUETOOTH_NAME "Dobrador  de AR"
-//#define BLUETOOTH_PASSWORD 0666
-
-//SoftwareSerial bluetooth(6, 7); // Emulate port (Rx, Tx) to use with hc-06
-
-const int pin = 3 ;// the input pin connect with  the Vout2 of Dust Sensor
-float duration;
-float starttime;
-float sampletime_ms = 30000;
-float lowpulseoccupancy = 0;
-float ratio = 0;
-float concentration = 0;
-
-#define TIME_MAX  30
-float pm25val = 0.05;
-float pm25coef = 0.00207916725464941;//The coefficient of pm2.5
-float pm25[TIME_MAX+1] ;//collect data of pm2.5 after a period of time
-
-DHT dht(DHTPIN, DHTTYPE);
-MQ135 mq135_sensor = MQ135(PIN_MQ135);
-MQ7 mq7(PIN_MQ7,5.0);
-
-// led and button config
-const int buttonPinBlue = 2;
-const int buttonPinSD = 7;
-const int ledPinBlue =  8;
-const int ledPinSD =  9;
-
+#include "main.h"
 
 void setup(){
   digitalWrite(ledPinBlue, LOW);
@@ -75,17 +29,17 @@ void setup(){
 
   //Serial.println("INICIO"); // deve ser removido no futuro
 
-  for (int i = 1; i <= 60; i++)
-  {
-    digitalWrite(ledPinSD, HIGH);
-    digitalWrite(ledPinBlue, HIGH);
-    delay(500);
-    digitalWrite(ledPinSD, LOW);
-    digitalWrite(ledPinBlue, LOW);
-    delay(500);
-  }
+  // for (int i = 1; i <= 60; i++)
+  // {
+  //   digitalWrite(ledPinSD, HIGH);
+  //   digitalWrite(ledPinBlue, HIGH);
+  //   delay(500);
+  //   digitalWrite(ledPinSD, LOW);
+  //   digitalWrite(ledPinBlue, LOW);
+  //   delay(500);
+  // }
 
-  while(1){
+  while(true){
     if (digitalRead(buttonPinBlue) == HIGH){
       digitalWrite(ledPinBlue, HIGH);
       bluetooh_status = true;
@@ -96,6 +50,8 @@ void setup(){
       sdcard_status = true;
       break;
     }
+    bluetooh_status = true;
+    break;
   }
   if(sdcard_status){
     if (!SD.begin(4)) {
@@ -108,19 +64,30 @@ void setup(){
       }
     }
   }
-  starttime = millis();
+  init_time = millis();
 
   for(int j=TIME_MAX;j>0;j--)
     pm25[j]=0.05;
     pm25[0]=1.5;
 }
 
+
+bool has_pass_fifthen_seconds(long unsigned int &init_time, long unsigned int &range_collect_time){
+  if ((millis()-init_time) > range_collect_time){
+    Serial << "PASSOU 15 SEC";
+    return true;
+  }
+  Serial << "FALSE";
+  return false;
+}
+
 void loop()
 {
+  int init_time_in_loop = millis();
   duration = pulseIn(pin, LOW);
   lowpulseoccupancy = lowpulseoccupancy+duration;
 
-  if ((millis()-starttime) > sampletime_ms)
+  if (has_pass_fifthen_seconds(init_time, sampletime_ms))
   {
     ratio = lowpulseoccupancy/(sampletime_ms*10);
     concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62;
@@ -129,7 +96,7 @@ void loop()
     pm25[0] = pm25val;
 
     lowpulseoccupancy = 0;
-    starttime = millis();
+    init_time = millis();
   }
   if(digitalRead(buttonPinBlue) == HIGH){
     rzero = mq135_sensor.getRZero();
@@ -148,7 +115,6 @@ void loop()
   // Get temp and humidity values with DHT11
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
-
   float ppmCO = mq7.getPPM();
 
   // Get sensor CO2 Resistence (RS/R0) to convert values in PPM
@@ -167,5 +133,7 @@ void loop()
     }
   }
     Serial << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", " << pm25val  << "\n";
-  delay(1000);
+  if (init_time_in_loop < 1000){
+    delay(1000-init_time_in_loop);
+  }
 }
