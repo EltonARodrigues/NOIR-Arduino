@@ -28,14 +28,21 @@ func init() {
 
 func ReadSerialWithBuffer(s *serial.Port, b *[][]byte) {
 	buf_message := make([]byte, MAX_LEN_MESSAGE)
+	n, err := s.Read(buf_message)
+	if err != nil {
+		log.Println(err)
+		time.Sleep(TIME_WHEN_ERROR)
+	}
+	*b = append(*b, buf_message[:n])
+	log.Println(string(buf_message[:n]))
+
+}
+
+func LoopWriteAndRead(s *serial.Port, t *[]byte, b *[][]byte) {
 	for {
-		n, err := s.Read(buf_message)
-		if err != nil {
-			log.Println(err)
-			time.Sleep(TIME_WHEN_ERROR)
-		}
-		*b = append(*b, buf_message[:n])
-		log.Println(string(buf_message[:n]))
+		WriteSerialToken(s, t)
+		ReadSerialWithBuffer(s, b)
+		time.Sleep(MSG_PER_TIME)
 	}
 }
 
@@ -48,20 +55,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	go WriteSerialToken(s, &TOKEN)
-	go ReadSerialWithBuffer(s, &BUFFER_READ)
+	go LoopWriteAndRead(s, &TOKEN, &BUFFER_READ)
 	fmt.Scanln()
 	fmt.Println(BUFFER_READ)
 }
 
-// This is need be in a fuction with ReadSerialWithBuffer
 func WriteSerialToken(s *serial.Port, token *[]byte) {
-	for {
-		_, err := s.Write(*token)
-		if err != nil {
-			log.Fatal(err)
-		}
-		time.Sleep(MSG_PER_TIME)
+	_, err := s.Write(*token)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
