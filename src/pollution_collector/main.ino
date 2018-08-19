@@ -24,21 +24,19 @@ void setup(){
   pinMode(buttonPinBlue, INPUT);
   pinMode(buttonPinSD, INPUT);
 
-  Serial.begin(9600);
+  Serial.begin(9600);//(38400);
   dht.begin();
 
   //Serial.println("INICIO"); // deve ser removido no futuro
 
-  // for (int i = 1; i <= 60; i++)
-  // {
-  //   digitalWrite(ledPinSD, HIGH);
-  //   digitalWrite(ledPinBlue, HIGH);
-  //   delay(500);
-  //   digitalWrite(ledPinSD, LOW);
-  //   digitalWrite(ledPinBlue, LOW);
-  //   delay(500);
-  // }
-
+  /*for (int i = 1; i <= 60; i++){
+    digitalWrite(ledPinSD, HIGH);
+    digitalWrite(ledPinBlue, HIGH);
+    delay(500);
+    digitalWrite(ledPinSD, LOW);
+    digitalWrite(ledPinBlue, LOW);
+    delay(500);
+  }*/
   while(true){
     if (digitalRead(buttonPinBlue) == HIGH){
       digitalWrite(ledPinBlue, HIGH);
@@ -50,8 +48,6 @@ void setup(){
       sdcard_status = true;
       break;
     }
-    bluetooh_status = true;
-    break;
   }
   if(sdcard_status){
     if (!SD.begin(4)) {
@@ -74,17 +70,15 @@ void setup(){
 
 bool has_pass_fifthen_seconds(long unsigned int &init_time, long unsigned int &range_collect_time){
   if ((millis()-init_time) > range_collect_time){
-    Serial << "PASSOU 15 SEC";
     return true;
   }
-  Serial << "FALSE";
   return false;
 }
 
 void loop()
 {
   int init_time_in_loop = millis();
-  duration = pulseIn(pin, LOW);
+  duration = pulseIn(DSM501_PM25, LOW);
   lowpulseoccupancy = lowpulseoccupancy+duration;
 
   if (has_pass_fifthen_seconds(init_time, sampletime_ms))
@@ -132,8 +126,16 @@ void loop()
       while(1);
     }
   }
-    Serial << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", " << pm25val  << "\n";
-  if (init_time_in_loop < 1000){
-    delay(1000-init_time_in_loop);
+  else{
+    if (Serial.available() > 0) {
+      bluetooth_command_received = Serial.read();
+      if(bluetooth_command_received == SERIAL_VERIFICATION)
+        Serial << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", " << pm25val  << "\n";
+    }
   }
+    //Serial << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", " << pm25val  << "\n";
+  //if (init_time_in_loop < 1000){
+  //  delay(1000-init_time_in_loop);
+  //}
+  //delay(1000);
 }
