@@ -1,1 +1,1 @@
-# PyAQuality
+# ArQuality
