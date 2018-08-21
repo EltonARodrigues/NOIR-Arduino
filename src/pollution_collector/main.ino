@@ -40,11 +40,22 @@ void setup(){
   while(true){
     if (digitalRead(buttonPinBlue) == HIGH){
       digitalWrite(ledPinBlue, HIGH);
+      delay(500);
+      digitalWrite(ledPinBlue, LOW);
+      if(digitalRead(buttonPinBlue) == HIGH){
+        bluetooh_option = true;
+        digitalWrite(ledPinBlue, HIGH);
+      }
+      else if(digitalRead(buttonPinSD) == HIGH){
+        bluetooh_option = false;
+        digitalWrite(ledPinBlue, HIGH);
+      }
       bluetooh_status = true;
       break;
     }
     else if (digitalRead(buttonPinSD) == HIGH){
       digitalWrite(ledPinSD, HIGH);
+
       sdcard_status = true;
       break;
     }
@@ -127,15 +138,19 @@ void loop()
     }
   }
   else{
-    if (Serial.available() > 0) {
-      bluetooth_command_received = Serial.read();
-      if(bluetooth_command_received == SERIAL_VERIFICATION)
-        Serial << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", " << pm25val  << "\n";
+    if(bluetooh_option == true){
+      if (Serial.available() > 0) {
+        bluetooth_command_received = Serial.read();
+        if(bluetooth_command_received == SERIAL_VERIFICATION)
+          Serial << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", " << pm25val  << "\n";
+        else if (bluetooth_command_received == ID)
+          Serial << ID << "\n";
+      }
     }
+    else{
+      Serial << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", " << pm25val  << "\n";
+    }
+
   }
-    //Serial << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", " << pm25val  << "\n";
-  //if (init_time_in_loop < 1000){
-  //  delay(1000-init_time_in_loop);
-  //}
   //delay(1000);
 }

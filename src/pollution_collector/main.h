@@ -7,10 +7,9 @@
   @version 0.9.9 01/08/18
 **********************************************/
 
-
-//#include<DSM501.h>
-
 // Calibration resistance at atmospheric CO2 level
+#define ID 1
+
 float rzero = 76.63;
 
 #define DSM501_PM25 3
@@ -27,6 +26,7 @@ bool sdcard_status = false;
 File sensorFile;
 
 bool bluetooh_status = false;
+bool bluetooh_option = false;
 #define SERIAL_VERIFICATION 49
 int bluetooth_command_received;
 
