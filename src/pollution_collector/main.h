@@ -9,6 +9,8 @@
 
 // Calibration resistance at atmospheric CO2 level
 #define ID 1
+#define CODE_TO_ID 50 // send "2"  to bluetooth and receive ID
+
 
 float rzero = 76.63;
 

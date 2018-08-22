@@ -16,6 +16,12 @@
 #include "Streaming.h"
 #include "main.h"
 
+float validate(float value){
+  if(isnan(value) || isinf(value)) return 0;
+  return value;
+}
+
+
 void setup(){
   digitalWrite(ledPinBlue, LOW);
   digitalWrite(ledPinSD, LOW);
@@ -42,13 +48,18 @@ void setup(){
       digitalWrite(ledPinBlue, HIGH);
       delay(500);
       digitalWrite(ledPinBlue, LOW);
-      if(digitalRead(buttonPinBlue) == HIGH){
-        bluetooh_option = true;
-        digitalWrite(ledPinBlue, HIGH);
-      }
-      else if(digitalRead(buttonPinSD) == HIGH){
-        bluetooh_option = false;
-        digitalWrite(ledPinBlue, HIGH);
+      delay(200);
+      while(true){
+        if(digitalRead(buttonPinBlue) == HIGH){
+          bluetooh_option = true;
+          digitalWrite(ledPinBlue, HIGH);
+          break;
+        }
+        else if(digitalRead(buttonPinSD) == HIGH){
+          bluetooh_option = false;
+          digitalWrite(ledPinBlue, HIGH);
+          break;
+        }
       }
       bluetooh_status = true;
       break;
@@ -130,8 +141,9 @@ void loop()
 
   if(sdcard_status){
     sensorFile = SD.open(FILE_NAME, FILE_WRITE);
-    sensorFile << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", " <<  pm25val  << "\n";
+    sensorFile << validate(temperature) << ", " <<validate(humidity) << ", " << validate(ppmCO) << ", " << validate(ppmco2) << ", " << validate(pm25val)  << "\n";
     sensorFile.close();
+    delay(1000);
     if(digitalRead(buttonPinSD) == HIGH){
       digitalWrite(ledPinSD, LOW);
       while(1);
@@ -142,15 +154,14 @@ void loop()
       if (Serial.available() > 0) {
         bluetooth_command_received = Serial.read();
         if(bluetooth_command_received == SERIAL_VERIFICATION)
-          Serial << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", " << pm25val  << "\n";
-        else if (bluetooth_command_received == ID)
+           Serial << validate(temperature) << ", " <<validate(humidity) << ", " << validate(ppmCO) << ", " << validate(ppmco2) << ", " << validate(pm25val)  << "\n";
+        else if (bluetooth_command_received == CODE_TO_ID)
           Serial << ID << "\n";
       }
     }
     else{
-      Serial << temperature << ", " << humidity << ", " << ppmCO << ", " << ppmco2 << ", " << pm25val  << "\n";
+      Serial << validate(temperature) << ", " <<validate(humidity) << ", " << validate(ppmCO) << ", " << validate(ppmco2) << ", " << validate(pm25val)  << "\n";
+      delay(1000);
     }
-
   }
-  //delay(1000);
 }
