@@ -3,7 +3,7 @@
 // Envie S Para o envio
 
 void setup(){
-   Serial.begin(9600); // begin serial communication
+   Serial.begin(38400); // begin serial communication
 }
 
 void loop() {

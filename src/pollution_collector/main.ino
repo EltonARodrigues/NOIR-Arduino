@@ -30,10 +30,10 @@ void setup(){
   pinMode(buttonPinBlue, INPUT);
   pinMode(buttonPinSD, INPUT);
 
-  Serial.begin(9600);//(38400);
+  Serial.begin(38400); // (38400);
   dht.begin();
 
-  //Serial.println("INICIO"); // deve ser removido no futuro
+ // Serial.println("INICIO"); // deve ser removido no futuro
 
   /*for (int i = 1; i <= 60; i++){
     digitalWrite(ledPinSD, HIGH);
@@ -44,6 +44,8 @@ void setup(){
     delay(500);
   }*/
   while(true){
+    //bluetooh_option = true;
+    //break; //remove isso ai
     if (digitalRead(buttonPinBlue) == HIGH){
       digitalWrite(ledPinBlue, HIGH);
       delay(500);
@@ -154,13 +156,13 @@ void loop()
       if (Serial.available() > 0) {
         bluetooth_command_received = Serial.read();
         if(bluetooth_command_received == SERIAL_VERIFICATION)
-           Serial << validate(temperature) << ", " <<validate(humidity) << ", " << validate(ppmCO) << ", " << validate(ppmco2) << ", " << validate(pm25val)  << "\n";
+          Serial << validate(temperature) << "," <<validate(humidity) << "," << validate(ppmCO) << "," << validate(ppmco2) << "," << validate(pm25val);
         else if (bluetooth_command_received == CODE_TO_ID)
           Serial << ID << "\n";
       }
     }
     else{
-      Serial << validate(temperature) << ", " <<validate(humidity) << ", " << validate(ppmCO) << ", " << validate(ppmco2) << ", " << validate(pm25val)  << "\n";
+      Serial << validate(temperature) << "," <<validate(humidity) << "," << validate(ppmCO) << "," << validate(ppmco2) << "," << validate(pm25val)  << "\n";
       delay(1000);
     }
   }

@@ -33,7 +33,7 @@ bool bluetooh_option = false;
 int bluetooth_command_received;
 
 // led and button config
-const int buttonPinBlue = 2;
+const int buttonPinBlue = 6;
 const int buttonPinSD = 7;
 const int ledPinBlue =  8;
 const int ledPinSD =  9;
