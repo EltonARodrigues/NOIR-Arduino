@@ -1,4 +1,4 @@
-# ArQuality
+# Noir Arduino
 
 ## Componentes Utilizados:
 
