@@ -14,7 +14,12 @@
 #include "MQ7.h"
 #include "DHT.h"
 #include "Streaming.h"
+#include <Wire.h>
+#include <RTClib.h>
 #include "main.h"
+
+RTC_DS1307 RTC;
+
 
 float validate(float value){
   if(isnan(value) || isinf(value)) return 0;
@@ -23,15 +28,22 @@ float validate(float value){
 
 
 void setup(){
+  Wire.begin();
+  RTC.begin();
+  Serial.begin(38400); // (38400);
+  dht.begin();
+
+  if (! RTC.isrunning()) {
+    Serial.println("RTC esta parado, ajustando com a data e hora da compilacao...");
+    RTC.adjust(DateTime(__DATE__, __TIME__));
+  }
+  //RTC.adjust(DateTime(__DATE__, "18:25:00"));
   digitalWrite(ledPinBlue, LOW);
   digitalWrite(ledPinSD, LOW);
   pinMode(ledPinSD, OUTPUT);
   pinMode(ledPinBlue, OUTPUT);
   pinMode(buttonPinBlue, INPUT);
   pinMode(buttonPinSD, INPUT);
-
-  Serial.begin(38400); // (38400);
-  dht.begin();
 
  // Serial.println("INICIO"); // deve ser removido no futuro
 
@@ -101,6 +113,9 @@ bool has_pass_fifthen_seconds(long unsigned int &init_time, long unsigned int &r
 
 void loop()
 {
+  DateTime now = RTC.now(); 
+  String dt = String(now.day()) + "/" + String(now.month()) + "/" + String(now.year()) + "  " + String(now.hour()) + ":" +  String(now.minute()) + ":" +  String(now.second());
+
   int init_time_in_loop = millis();
   duration = pulseIn(DSM501_PM25, LOW);
   lowpulseoccupancy = lowpulseoccupancy+duration;
@@ -143,7 +158,7 @@ void loop()
 
   if(sdcard_status){
     sensorFile = SD.open(FILE_NAME, FILE_WRITE);
-    sensorFile << validate(temperature) << ", " <<validate(humidity) << ", " << validate(ppmCO) << ", " << validate(ppmco2) << ", " << validate(pm25val)  << "\n";
+    sensorFile << dt << "," << validate(temperature) << ", " <<validate(humidity) << ", " << validate(ppmCO) << ", " << validate(ppmco2) << ", " << validate(pm25val)  << "\n";
     sensorFile.close();
     delay(1000);
     if(digitalRead(buttonPinSD) == HIGH){
@@ -158,11 +173,12 @@ void loop()
         if(bluetooth_command_received == SERIAL_VERIFICATION)
           Serial << validate(temperature) << "," <<validate(humidity) << "," << validate(ppmCO) << "," << validate(ppmco2) << "," << validate(pm25val);
         else if (bluetooth_command_received == CODE_TO_ID)
-          Serial << ID << "\n";
+          Serial << ID;
       }
     }
     else{
-      Serial << validate(temperature) << "," <<validate(humidity) << "," << validate(ppmCO) << "," << validate(ppmco2) << "," << validate(pm25val)  << "\n";
+      //Serial << validate(temperature) << "," <<validate(humidity) << "," << validate(ppmCO) << "," << validate(ppmco2) << "," << validate(pm25val)  << "\n";
+      Serial  << validate(temperature) << ", " <<validate(humidity) << ", " << validate(ppmCO) << ", " << validate(ppmco2) << ", " << validate(pm25val)  << "\n";
       delay(1000);
     }
   }

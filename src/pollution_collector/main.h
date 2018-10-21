@@ -17,7 +17,10 @@ float rzero = 76.63;
 #define DSM501_PM25 3
 #define DHTPIN 5
 #define PIN_MQ7 A0
-#define PIN_MQ135 A4
+#define PIN_MQ135 A2 // A4
+#define PIN_RTC_SDA A4
+#define PIN_RTC_SCL A5
+
 
 #define DHTTYPE DHT22
 
